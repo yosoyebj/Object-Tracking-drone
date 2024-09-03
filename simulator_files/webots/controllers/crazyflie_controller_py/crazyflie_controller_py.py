@@ -8,7 +8,8 @@ from controller import Gyro
 from controller import Keyboard
 from controller import Camera
 from controller import DistanceSensor
-
+from controller import Robot, Motor, InertialUnit, GPS, Gyro, Keyboard, Camera, DistanceSensor
+from crazyflie_get_frame import get_camera_frame, display_camera_frame
 from math import cos, sin
 import sys
 sys.path.append('../../../../controllers_shared/python_based')
@@ -72,14 +73,13 @@ if __name__ == '__main__':
 
     # Main loop:
     while robot.step(timestep) != -1:
-        dt = robot.getTime() - past_time
-
-        # Get and display camera frame
-        image_bgr = get_camera_frame(camera)
-        if not display_camera_frame(image_bgr):
+        # Get and display camera frame with YOLO detection
+        annotated_frame = get_camera_frame(camera)
+        if not display_camera_frame(annotated_frame):
             break  # Stop the loop if the display window is closed
 
-        # The rest of your control code remains the same
+
+        dt = robot.getTime() - past_time
         roll = imu.getRollPitchYaw()[0]
         pitch = imu.getRollPitchYaw()[1]
         yaw = imu.getRollPitchYaw()[2]
