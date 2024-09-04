@@ -1,21 +1,20 @@
-from controller import Robot, Camera
-from crazyflie_get_frame import get_camera_frame, display_camera_frame
-from controller import Robot
-from controller import Motor
-from controller import InertialUnit
-from controller import GPS
-from controller import Gyro
-from controller import Keyboard
-from controller import Camera
-from controller import DistanceSensor
+#from controller import Robot, Camera
+#from crazyflie_get_frame import get_camera_frame, display_camera_frame
+#from controller import Robot
+#from controller import Motor
+#from controller import InertialUnit
+#from controller import GPS
+#from controller import Gyro
+#from controller import Keyboard
+#from controller import Camera
+#from controller import DistanceSensor
 from controller import Robot, Motor, InertialUnit, GPS, Gyro, Keyboard, Camera, DistanceSensor
 from crazyflie_get_frame import get_camera_frame, display_camera_frame
 from math import cos, sin
 import sys
 sys.path.append('../../../../controllers_shared/python_based')
 from pid_controller import pid_velocity_fixed_height_controller
-# Other imports and setup code remain the same
-# ...
+
 FLYING_ATTITUDE = 1
 if __name__ == '__main__':
 
