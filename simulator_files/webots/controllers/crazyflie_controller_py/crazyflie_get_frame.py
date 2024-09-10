@@ -5,7 +5,7 @@ from crazyflie_image import detect_objects_in_frame
 def get_camera_frame(camera):
     """
     Capture a frame from the Webots camera, convert it to a format suitable for OpenCV,
-    perform object detection, and return the annotated image.
+    perform object detection, and return the annotated image and detected object details.
     """
     # Get the camera image
     image = camera.getImage()
@@ -16,10 +16,10 @@ def get_camera_frame(camera):
     image_array = np.frombuffer(image, np.uint8).reshape((height, width, 4))  # BGRA format
     image_bgr = cv2.cvtColor(image_array, cv2.COLOR_BGRA2BGR)  # Convert to BGR for OpenCV
 
-    # Detect objects in the frame using the imported function
-    annotated_frame = detect_objects_in_frame(image_bgr)
+    # Detect objects in the frame using YOLO
+    annotated_frame, object_center_x, object_center_y, detected_object = detect_objects_in_frame(image_bgr)
 
-    return annotated_frame
+    return annotated_frame, object_center_x, object_center_y, detected_object
 
 def display_camera_frame(image_bgr):
     """
