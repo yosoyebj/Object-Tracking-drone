@@ -13,8 +13,8 @@ FLYING_ATTITUDE = 1  # Desired height to fly at
 manual_mode = True  # Start in manual mode
 auto_mode_enabled = False  # Auto mode starts off
 object_detected = False  # Flag to track if an object is detected
-stabilization_start_time = None  # For the 3-second stabilization timer
-stabilization_duration = 1  # Set the stabilization period to 3 seconds
+last_detection_time = None  # Tracks when the object was last detected
+no_detection_duration = 1  # Wait 1 seconds before switching back to manual mode if no detection
 
 if __name__ == '__main__':
 
@@ -75,46 +75,39 @@ if __name__ == '__main__':
 
         current_time = time.time()  # Get the current time
 
-        # Object detection logic
-        if detected_object == "orange" or detected_object == "sports ball" or detected_object == "bird":
-            if not object_detected:
-                print("Object detected! Stabilizing for 3 seconds...")
-                object_detected = True
-                manual_mode = False  # Disable manual mode
-                auto_mode_enabled = False  # Disable auto mode temporarily
-                stabilization_start_time = current_time  # Start stabilization timer
+        # Object detection logic with continuous tracking
+        if detected_object == "orange" or detected_object == "sports ball" or detected_object=="bird":
+            last_detection_time = current_time  # Update the last time an object was detected
+            object_detected = True
 
-            # Stabilization period before enabling auto mode
-            if stabilization_start_time and current_time - stabilization_start_time >= stabilization_duration:
-                print("Stabilization complete. Switching to auto mode.")
-                auto_mode_enabled = True  # Enable auto mode after stabilization period
+            # If in manual mode, switch to auto mode
+            if manual_mode:
+                print("Switching to auto mode for object tracking.")
+                manual_mode = False  # Turn off manual control
+                auto_mode_enabled = True  # Enable auto mode
 
-            # Calculate how to center the object in auto mode
-            if auto_mode_enabled:
-                frame_center_x = camera.getWidth() / 2
-                frame_center_y = camera.getHeight() / 2
-                sideways_desired, height_diff_desired = calculate_movement_to_center(
-                    object_center_x, object_center_y, frame_center_x, frame_center_y
-                )
-                forward_desired = 0  # No forward/backward movement in auto mode
-                yaw_desired = 0  # Minimal yaw movement
+            # Auto mode: Calculate how to center the object
+            frame_center_x = camera.getWidth() / 2
+            frame_center_y = camera.getHeight() / 2
+            sideways_desired, height_diff_desired = calculate_movement_to_center(
+                object_center_x, object_center_y, frame_center_x, frame_center_y
+            )
+            forward_desired = 0  # No forward/backward movement in auto mode
+            yaw_desired = 0  # Minimal yaw movement
 
         else:
-            # If object is no longer detected
-            if object_detected:
-                print("Object lost. Stabilizing before switching back to manual mode...")
-                object_detected = False
-                auto_mode_enabled = False
-                stabilization_start_time = current_time  # Start stabilization before switching to manual mode
+            # If the object is not detected, check the last detection time
+            if last_detection_time and (current_time - last_detection_time >= no_detection_duration):
+                if object_detected:
+                    print("Object lost. Switching back to manual mode after 3 seconds.")
+                    object_detected = False
+                    auto_mode_enabled = False  # Turn off auto mode
+                    manual_mode = True  # Re-enable manual mode
 
-            # Stabilization period before enabling manual mode
-            if stabilization_start_time and current_time - stabilization_start_time >= stabilization_duration:
-                print("Switching back to manual mode.")
-                manual_mode = True  # Re-enable manual mode
-
-            # Reset auto movements when no object is detected
-            sideways_desired, height_diff_desired = 0, 0
-            forward_desired, yaw_desired = 0, 0
+            # In manual mode, reset desired movements when no object is detected
+            if manual_mode:
+                sideways_desired, height_diff_desired = 0, 0
+                forward_desired, yaw_desired = 0, 0
 
         dt = robot.getTime() - past_time
         roll = imu.getRollPitchYaw()[0]
@@ -154,8 +147,6 @@ if __name__ == '__main__':
                 elif key == ord('S'):
                     height_diff_desired -= 0.1
                 key = keyboard.getKey()
-        else:
-            print("Auto mode: Drone adjusting to center object")
 
         # Update desired height based on movement calculation
         height_desired += height_diff_desired * dt
