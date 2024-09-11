@@ -1,4 +1,5 @@
-from controller import Robot, Motor, InertialUnit, GPS, Gyro, Keyboard, Camera, DistanceSensor
+import time
+from controller import Robot, Motor, InertialUnit, GPS, Gyro, Keyboard, Camera
 from crazyflie_get_frame import get_camera_frame, display_camera_frame
 from make_it_center import calculate_movement_to_center
 from math import cos, sin
@@ -6,30 +7,38 @@ import sys
 sys.path.append('../../../../controllers_shared/python_based')
 from pid_controller import pid_velocity_fixed_height_controller
 
-FLYING_ATTITUDE = 1
+FLYING_ATTITUDE = 1  # Desired height to fly at
 
-# Define modes
+# Define modes and timers
 manual_mode = True  # Start in manual mode
+auto_mode_enabled = False  # Auto mode starts off
+object_detected = False  # Flag to track if an object is detected
+stabilization_start_time = None  # For the 3-second stabilization timer
+stabilization_duration = 1  # Set the stabilization period to 3 seconds
 
 if __name__ == '__main__':
 
     robot = Robot()
     timestep = int(robot.getBasicTimeStep())
 
-    # Initialize motors and sensors
+    # Initialize motors with the same setup from the core code (stabilization)
     m1_motor = robot.getDevice("m1_motor")
     m1_motor.setPosition(float('inf'))
-    m1_motor.setVelocity(-1)
+    m1_motor.setVelocity(-1)  # Opposing motor velocities for stability
+
     m2_motor = robot.getDevice("m2_motor")
     m2_motor.setPosition(float('inf'))
     m2_motor.setVelocity(1)
+
     m3_motor = robot.getDevice("m3_motor")
     m3_motor.setPosition(float('inf'))
     m3_motor.setVelocity(-1)
+
     m4_motor = robot.getDevice("m4_motor")
     m4_motor.setPosition(float('inf'))
     m4_motor.setVelocity(1)
 
+    # Initialize sensors
     imu = robot.getDevice("inertial_unit")
     imu.enable(timestep)
     gps = robot.getDevice("gps")
@@ -38,14 +47,6 @@ if __name__ == '__main__':
     gyro.enable(timestep)
     camera = robot.getDevice("camera")
     camera.enable(timestep)
-    range_front = robot.getDevice("range_front")
-    range_front.enable(timestep)
-    range_left = robot.getDevice("range_left")
-    range_left.enable(timestep)
-    range_back = robot.getDevice("range_back")
-    range_back.enable(timestep)
-    range_right = robot.getDevice("range_right")
-    range_right.enable(timestep)
 
     keyboard = Keyboard()
     keyboard.enable(timestep)
@@ -72,29 +73,48 @@ if __name__ == '__main__':
         if not display_camera_frame(annotated_frame):
             break  # Stop the loop if the display window is closed
 
-        # Auto mode triggers when an orange ball or bird is detected
+        current_time = time.time()  # Get the current time
+
+        # Object detection logic
         if detected_object == "orange" or detected_object == "sports ball" or detected_object == "bird":
-            manual_mode = False  # Switch to auto mode
-            # Calculate the frame center
-            frame_center_x = camera.getWidth() / 2
-            frame_center_y = camera.getHeight() / 2
+            if not object_detected:
+                print("Object detected! Stabilizing for 3 seconds...")
+                object_detected = True
+                manual_mode = False  # Disable manual mode
+                auto_mode_enabled = False  # Disable auto mode temporarily
+                stabilization_start_time = current_time  # Start stabilization timer
 
-            # Calculate how to move the drone to center the object
-            sideways_desired, height_diff_desired = calculate_movement_to_center(
-                object_center_x, object_center_y, frame_center_x, frame_center_y
-            )
+            # Stabilization period before enabling auto mode
+            if stabilization_start_time and current_time - stabilization_start_time >= stabilization_duration:
+                print("Stabilization complete. Switching to auto mode.")
+                auto_mode_enabled = True  # Enable auto mode after stabilization period
 
-            # Print debug information to check values
-            print(f"Auto mode: Object detected: {detected_object}")
-            print(f"Auto mode: Calculated movement - Sideways: {sideways_desired}, Height: {height_diff_desired}")
-
-            forward_desired = 0  # No forward/backward movement in auto mode
-            yaw_desired = 0  # No yaw rotation in auto mode
+            # Calculate how to center the object in auto mode
+            if auto_mode_enabled:
+                frame_center_x = camera.getWidth() / 2
+                frame_center_y = camera.getHeight() / 2
+                sideways_desired, height_diff_desired = calculate_movement_to_center(
+                    object_center_x, object_center_y, frame_center_x, frame_center_y
+                )
+                forward_desired = 0  # No forward/backward movement in auto mode
+                yaw_desired = 0  # Minimal yaw movement
 
         else:
-            manual_mode = True  # Switch to manual mode
+            # If object is no longer detected
+            if object_detected:
+                print("Object lost. Stabilizing before switching back to manual mode...")
+                object_detected = False
+                auto_mode_enabled = False
+                stabilization_start_time = current_time  # Start stabilization before switching to manual mode
+
+            # Stabilization period before enabling manual mode
+            if stabilization_start_time and current_time - stabilization_start_time >= stabilization_duration:
+                print("Switching back to manual mode.")
+                manual_mode = True  # Re-enable manual mode
+
+            # Reset auto movements when no object is detected
             sideways_desired, height_diff_desired = 0, 0
-            forward_desired, yaw_desired = 0, 0  # Reset auto movements
+            forward_desired, yaw_desired = 0, 0
 
         dt = robot.getTime() - past_time
         roll = imu.getRollPitchYaw()[0]
@@ -126,9 +146,9 @@ if __name__ == '__main__':
                 elif key == Keyboard.LEFT:
                     sideways_desired += 0.5
                 elif key == ord('Q'):
-                    yaw_desired += 1
+                    yaw_desired = +1  # Disable yaw in manual mode for now
                 elif key == ord('E'):
-                    yaw_desired -= 1
+                    yaw_desired = -1  # Disable yaw in manual mode for now
                 elif key == ord('W'):
                     height_diff_desired += 0.1
                 elif key == ord('S'):
@@ -153,8 +173,5 @@ if __name__ == '__main__':
         m4_motor.setVelocity(motor_power[3])
 
         past_time = robot.getTime()
-        past_x_global = x_global
-        past_y_global = y_global
-
-        # Debugging: check movement adjustments
-        print(f"Sideways movement: {sideways_desired}, Height adjustment: {height_diff_desired}")
+        past_x_global = gps.getValues()[0]
+        past_y_global = gps.getValues()[1]

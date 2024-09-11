@@ -26,7 +26,7 @@ def display_camera_frame(image_bgr):
     Display the camera frame using OpenCV.
     """
     cv2.imshow('Drone Camera', image_bgr)
-    if cv2.waitKey(1) & 0xFF == ord('q'):  # Press 'q' to quit
+    if cv2.waitKey(1) & 0xFF == ord('p'):  # Press 'p' to quit
         cv2.destroyAllWindows()
         return False  # Indicate that the loop should stop
     return True  # Continue displaying frames
