@@ -8,13 +8,14 @@ sys.path.append('../../../../controllers_shared/python_based')
 from pid_controller import pid_velocity_fixed_height_controller
 
 FLYING_ATTITUDE = 1  # Desired height to fly at
+DESIRED_OBJECT_SIZE = 2000# This is a hypothetical value for desired object size in the frame
 
 # Define modes and timers
 manual_mode = True  # Start in manual mode
 auto_mode_enabled = False  # Auto mode starts off
 object_detected = False  # Flag to track if an object is detected
 last_detection_time = None  # Tracks when the object was last detected
-no_detection_duration = 1  # Wait 1 seconds before switching back to manual mode if no detection
+no_detection_duration = 1  # Wait 1 second before switching back to manual mode if no detection
 
 if __name__ == '__main__':
 
@@ -24,7 +25,7 @@ if __name__ == '__main__':
     # Initialize motors with the same setup from the core code (stabilization)
     m1_motor = robot.getDevice("m1_motor")
     m1_motor.setPosition(float('inf'))
-    m1_motor.setVelocity(-1)  # Opposing motor velocities for stability
+    m1_motor.setVelocity(-1)
 
     m2_motor = robot.getDevice("m2_motor")
     m2_motor.setPosition(float('inf'))
@@ -69,14 +70,14 @@ if __name__ == '__main__':
     # Main loop:
     while robot.step(timestep) != -1:
         # Get and display camera frame with YOLO detection
-        annotated_frame, object_center_x, object_center_y, detected_object = get_camera_frame(camera)
+        annotated_frame, object_center_x, object_center_y, object_size, detected_object = get_camera_frame(camera)
         if not display_camera_frame(annotated_frame):
             break  # Stop the loop if the display window is closed
 
         current_time = time.time()  # Get the current time
 
         # Object detection logic with continuous tracking
-        if detected_object == "orange" or detected_object == "sports ball" or detected_object=="bird":
+        if detected_object == "orange" or detected_object == "sports ball" or detected_object == "bird":
             last_detection_time = current_time  # Update the last time an object was detected
             object_detected = True
 
@@ -89,10 +90,9 @@ if __name__ == '__main__':
             # Auto mode: Calculate how to center the object
             frame_center_x = camera.getWidth() / 2
             frame_center_y = camera.getHeight() / 2
-            sideways_desired, height_diff_desired = calculate_movement_to_center(
-                object_center_x, object_center_y, frame_center_x, frame_center_y
+            sideways_desired, height_diff_desired, forward_desired = calculate_movement_to_center(
+                object_center_x, object_center_y, frame_center_x, frame_center_y, object_size, DESIRED_OBJECT_SIZE
             )
-            forward_desired = 0  # No forward/backward movement in auto mode
             yaw_desired = 0  # Minimal yaw movement
 
         else:
@@ -139,9 +139,9 @@ if __name__ == '__main__':
                 elif key == Keyboard.LEFT:
                     sideways_desired += 0.5
                 elif key == ord('Q'):
-                    yaw_desired = +1  # Disable yaw in manual mode for now
+                    yaw_desired = +1
                 elif key == ord('E'):
-                    yaw_desired = -1  # Disable yaw in manual mode for now
+                    yaw_desired = -1
                 elif key == ord('W'):
                     height_diff_desired += 0.1
                 elif key == ord('S'):

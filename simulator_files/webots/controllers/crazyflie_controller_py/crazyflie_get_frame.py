@@ -17,9 +17,9 @@ def get_camera_frame(camera):
     image_bgr = cv2.cvtColor(image_array, cv2.COLOR_BGRA2BGR)  # Convert to BGR for OpenCV
 
     # Detect objects in the frame using YOLO
-    annotated_frame, object_center_x, object_center_y, detected_object = detect_objects_in_frame(image_bgr)
+    annotated_frame, object_center_x, object_center_y, object_size, detected_object = detect_objects_in_frame(image_bgr)
 
-    return annotated_frame, object_center_x, object_center_y, detected_object
+    return annotated_frame, object_center_x, object_center_y, object_size, detected_object
 
 def display_camera_frame(image_bgr):
     """

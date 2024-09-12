@@ -1,6 +1,7 @@
-def calculate_movement_to_center(object_center_x, object_center_y, frame_center_x, frame_center_y):
+def calculate_movement_to_center(object_center_x, object_center_y, frame_center_x, frame_center_y, object_size, desired_object_size):
     """
-    Calculate how much the drone should move to keep the object in the center of the camera frame.
+    Calculate how much the drone should move to keep the object in the center of the camera frame
+    and adjust its distance to the object based on object size.
     """
     # Difference between the object's center and the camera's center
     x_diff = object_center_x - frame_center_x
@@ -9,6 +10,7 @@ def calculate_movement_to_center(object_center_x, object_center_y, frame_center_
     # Initialize desired movement
     sideways_desired = 0
     height_diff_desired = 0
+    forward_desired = 0
 
     # Threshold to ignore tiny differences
     threshold = 20  # You can tweak this value to make the drone more or less sensitive
@@ -27,4 +29,11 @@ def calculate_movement_to_center(object_center_x, object_center_y, frame_center_
         else:
             height_diff_desired = 0.1  # Move up
 
-    return sideways_desired, height_diff_desired
+    # Distance control (move closer or further based on object size)
+    if object_size and abs(object_size - desired_object_size) > 500:  # Adjust tolerance , if it is littl bit close or away than desired size, it will not matter
+        if object_size < desired_object_size:
+            forward_desired = 0.5  # Move closer
+        else:
+            forward_desired = -0.5  # Move further
+
+    return sideways_desired, height_diff_desired, forward_desired

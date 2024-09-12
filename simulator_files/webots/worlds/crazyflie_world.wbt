@@ -1,15 +1,16 @@
-#VRML_SIM R2023a utf8
+#VRML_SIM R2023b utf8
 
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023a/projects/objects/backgrounds/protos/TexturedBackground.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023a/projects/objects/backgrounds/protos/TexturedBackgroundLight.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023a/projects/objects/floors/protos/Floor.proto"
 EXTERNPROTO "../protos/Crazyflie.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/objects/balls/protos/Ball.proto"
 
 WorldInfo {
 }
 Viewpoint {
   orientation -0.07385539700858673 0.9327769938687757 0.3528065476175779 0.7219789445158288
-  position -0.38715368865588295 -0.12529250851059962 0.28682163590934284
+  position -0.23290256678270785 -0.0670249146099394 1.2187520058143169
   follow "Crazyflie"
 }
 TexturedBackground {
@@ -18,5 +19,15 @@ TexturedBackgroundLight {
 }
 Floor {
 }
+Ball {
+  translation 7.54019881876408e-05 2.999928224090441 0.09991365879197507
+  rotation -0.6889014035063948 -0.7242009456439865 -0.03078711703416219 0.022253658777512286
+  radius 0.1
+}
 Crazyflie {
+  hidden linearVelocity_0 -4.3404144333603803e-16 -9.72495243195808e-17 -0.013843783807096277
+  hidden angularVelocity_0 -2.0430265142721097e-16 -6.953553873157542e-16 1.548829329203072e-15
+  translation 0.0001115809567482208 -0.00011190508105946367 0.9922782903985263
+  rotation 2.2403328690434933e-11 -4.850777840297632e-11 1 9.914084752207346e-06
+  controller "crazyflie_controller_py"
 }
