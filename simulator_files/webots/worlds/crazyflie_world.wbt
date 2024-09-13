@@ -3,31 +3,45 @@
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023a/projects/objects/backgrounds/protos/TexturedBackground.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023a/projects/objects/backgrounds/protos/TexturedBackgroundLight.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023a/projects/objects/floors/protos/Floor.proto"
-EXTERNPROTO "../protos/Crazyflie.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/objects/balls/protos/Ball.proto"
+EXTERNPROTO "../protos/Crazyflie.proto"
 
 WorldInfo {
+  basicTimeStep 32
 }
+
 Viewpoint {
   orientation -0.07385539700858673 0.9327769938687757 0.3528065476175779 0.7219789445158288
-  position -0.23290256678270785 -0.0670249146099394 1.2187520058143169
+  position -5.6390675121148055 -1.621339350838898 6.687300957182799
   follow "Crazyflie"
 }
+
 TexturedBackground {
 }
+
 TexturedBackgroundLight {
 }
+
 Floor {
 }
-Ball {
-  translation 7.54019881876408e-05 2.999928224090441 0.09991365879197507
-  rotation -0.6889014035063948 -0.7242009456439865 -0.03078711703416219 0.022253658777512286
+
+# Ball without a controller (controlled by Supervisor)
+DEF BALL Ball {
+  translation 0.0787556154309817 1.0 0.0999136590473795  # Height set at 1.0 to avoid bouncing
+  rotation -0.9986962595509572 0.0403719293182525 -0.031239213851326986 0.4119699086883307
   radius 0.1
 }
+
 Crazyflie {
-  hidden linearVelocity_0 -4.3404144333603803e-16 -9.72495243195808e-17 -0.013843783807096277
-  hidden angularVelocity_0 -2.0430265142721097e-16 -6.953553873157542e-16 1.548829329203072e-15
-  translation 0.0001115809567482208 -0.00011190508105946367 0.9922782903985263
-  rotation 2.2403328690434933e-11 -4.850777840297632e-11 1 9.914084752207346e-06
+  translation -0.00022501527443644092 -0.00022721282143921826 1.000031439094993
+  rotation 7.35701165518448e-14 5.473603219508386e-15 -1 0.006677302516931762
   controller "crazyflie_controller_py"
 }
+
+# Supervisor node
+Robot {
+  name "Supervisor"
+  supervisor TRUE  # Set as Supervisor
+  controller "supervisor_controller"  # Attach Supervisor controller to manage ball
+}
+

@@ -13,7 +13,7 @@ def calculate_movement_to_center(object_center_x, object_center_y, frame_center_
     forward_desired = 0
 
     # Threshold to ignore tiny differences
-    threshold = 20  # You can tweak this value to make the drone more or less sensitive
+    threshold = 30  # You can tweak this value to make the drone more or less sensitive
 
     # Horizontal movement (left or right)
     if abs(x_diff) > threshold:

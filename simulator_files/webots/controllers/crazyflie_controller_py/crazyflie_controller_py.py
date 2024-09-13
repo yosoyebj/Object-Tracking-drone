@@ -8,7 +8,7 @@ sys.path.append('../../../../controllers_shared/python_based')
 from pid_controller import pid_velocity_fixed_height_controller
 
 FLYING_ATTITUDE = 1  # Desired height to fly at
-DESIRED_OBJECT_SIZE = 2000# This is a hypothetical value for desired object size in the frame
+DESIRED_OBJECT_SIZE = 1000# This is a hypothetical value for desired object size in the frame
 
 # Define modes and timers
 manual_mode = True  # Start in manual mode
