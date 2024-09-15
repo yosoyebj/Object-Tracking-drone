@@ -5,7 +5,7 @@ def calculate_movement_to_center(object_center_x, object_center_y, frame_center_
     """
     # Difference between the object's center and the camera's center
     x_diff = object_center_x - frame_center_x
-    y_diff = object_center_y - frame_center_y
+    y_diff = object_center_y - (frame_center_y + 40)
 
     # Initialize desired movement
     sideways_desired = 0
@@ -32,8 +32,8 @@ def calculate_movement_to_center(object_center_x, object_center_y, frame_center_
     # Distance control (move closer or further based on object size)
     if object_size and abs(object_size - desired_object_size) > 500:  # Adjust tolerance , if it is littl bit close or away than desired size, it will not matter
         if object_size < desired_object_size:
-            forward_desired = 0.5  # Move closer
+            forward_desired = 1  # Move closer
         else:
-            forward_desired = -0.5  # Move further
+            forward_desired = -1  # Move further
 
     return sideways_desired, height_diff_desired, forward_desired
