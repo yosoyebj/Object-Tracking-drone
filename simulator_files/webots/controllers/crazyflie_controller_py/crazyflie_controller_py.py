@@ -8,7 +8,8 @@ sys.path.append('../../../../controllers_shared/python_based')
 from pid_controller import pid_velocity_fixed_height_controller
 
 FLYING_ATTITUDE = 1  # Desired height to fly at
-DESIRED_OBJECT_SIZE = 1000# This is a hypothetical value for desired object size in the frame
+DESIRED_OBJECT_SIZE = 1000  # This is a hypothetical value for desired object size in the frame
+AUTO_YAW_SPEED = 1  # Speed at which the drone rotates when no object is detected
 
 # Define modes and timers
 manual_mode = True  # Start in manual mode
@@ -67,6 +68,8 @@ if __name__ == '__main__':
     print("- Use Q and E to rotate around yaw ")
     print("- Use W and S to go up and down\n ")
 
+    yaw_desired = AUTO_YAW_SPEED  # Initialize yaw to rotate autonomously
+
     # Main loop:
     while robot.step(timestep) != -1:
         # Get and display camera frame with YOLO detection
@@ -93,7 +96,7 @@ if __name__ == '__main__':
             sideways_desired, height_diff_desired, forward_desired = calculate_movement_to_center(
                 object_center_x, object_center_y, frame_center_x, frame_center_y, object_size, DESIRED_OBJECT_SIZE
             )
-            yaw_desired = 0  # Minimal yaw movement
+            yaw_desired = 0  # Stop yaw rotation once the object is detected
 
         else:
             # If the object is not detected, check the last detection time
@@ -106,8 +109,8 @@ if __name__ == '__main__':
 
             # In manual mode, reset desired movements when no object is detected
             if manual_mode:
-                sideways_desired, height_diff_desired = 0, 0
-                forward_desired, yaw_desired = 0, 0
+                sideways_desired, height_diff_desired, forward_desired = 0, 0, 0
+                yaw_desired = AUTO_YAW_SPEED  # Continue rotating to search for the object
 
         dt = robot.getTime() - past_time
         roll = imu.getRollPitchYaw()[0]
@@ -139,9 +142,9 @@ if __name__ == '__main__':
                 elif key == Keyboard.LEFT:
                     sideways_desired += 0.5
                 elif key == ord('Q'):
-                    yaw_desired = +1
+                    yaw_desired += 1
                 elif key == ord('E'):
-                    yaw_desired = -1
+                    yaw_desired -= 1
                 elif key == ord('W'):
                     height_diff_desired += 0.1
                 elif key == ord('S'):
